@@ -1,0 +1,38 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: "x64"
+
+      - name: Build and test actual Windows executable
+        run: python build_windows.py --ci
+
+      - name: Upload executable only after all checks pass
+        uses: actions/upload-artifact@v4
+        with:
+          name: MapBuilder-Windows-x64
+          path: |
+            dist/MapBuilder.exe
+            dist/self-test-result.json
+            dist/gui-smoke-result.json
+            dist/build-info.json
+            dist/build-requirements.txt
+          if-no-files-found: error
+          retention-days: 14
