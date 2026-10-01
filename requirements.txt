@@ -1,0 +1,13 @@
+# 지도 생성기 전용. FastAPI/uvicorn/라우팅 서버는 필요하지 않습니다.
+# Windows x64 + Python 3.12 빌드를 대상으로 합니다.
+osmnx==2.1.1
+networkx>=3.4,<4
+numpy>=2.2,<3
+pandas>=2.2,<4
+geopandas>=1.0.1,<2
+shapely>=2.1,<3
+pyproj>=3.7,<4
+pyogrio>=0.11,<1
+requests>=2.32,<3
+certifi>=2024.8
+lxml>=5.3,<7
