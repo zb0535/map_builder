@@ -7,7 +7,8 @@ import time
 import networkx as nx
 import pytest
 
-from builder_core import cleanup_stage, new_job, run_build, safe_stem, verify_saved_graph
+from builder_core import (cleanup_stage, new_job, plan_large_area_tiles, run_build,
+                          safe_stem, verify_saved_graph, MAX_AREA_KM2)
 from map_processing import segment_projected_graph
 from self_test import synthetic_download, synthetic_worker
 
@@ -157,6 +158,24 @@ def test_real_osmnx_transforms_with_fake_download(tmp_path,monkeypatch):
     assert result["edges"] == 12
     assert result["place"] == "합성 테스트 경계"
     assert calls == [{"network_type":"walk","simplify":False,"retain_all":False}]
+
+
+def test_large_area_tile_plan_has_overlap_and_safe_download_areas():
+    import geopandas as gpd
+    from shapely.geometry import box
+    # 약 120km² 가로형 경계: 광주 북구처럼 단일 파일 한도를 넘는 입력을 모사한다.
+    boundary = gpd.GeoDataFrame(geometry=[box(126.85, 35.12, 126.98, 35.20)], crs="EPSG:4326")
+    tiles = plan_large_area_tiles(boundary)
+    assert len(tiles) >= 2
+    assert all(tile["download_area_km2"] <= MAX_AREA_KM2 for tile in tiles)
+    assert all(tile["download_area_km2"] > tile["core_area_km2"] for tile in tiles)
+    assert len({tile["id"] for tile in tiles}) == len(tiles)
+
+
+def test_large_area_job_option_is_preserved(tmp_path):
+    job = new_job("광주광역시 북구", tmp_path, tile_large_area=True)
+    assert job["tile_large_area"] is True
+    assert job["tile_overlap_km"] == 2.0
 
 
 def test_large_area_is_rejected_before_download(tmp_path,monkeypatch):
